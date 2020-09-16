@@ -1,0 +1,52 @@
+---
+title: "Statistics_challenge"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Import the necessary library
+```{r import}
+library(utils)
+```
+
+
+Import the COVID-19 data from online
+```{r}
+Covid_Data <- read.csv("https://opendata.ecdc.europa.eu/covid19/casedistribution/csv", na.strings = "", fileEncoding = "UTF-8-BOM")
+```
+
+
+Select a specific date from the Covid_Data dataframe. In particular, I chose this date because it already had a low P-value (~0.13) for alphanumeric position and cases per 100,000 people.
+```{r}
+Covid_Data_1 <- Covid_Data[Covid_Data$dateRep=="10/09/2020",]
+```
+
+
+Remove points from the dataset that skew the data to a lower p-value. In this case, remove all countries which have names that are more than 10 characters long. My thinking for this was that many countries with the country code "U" (which produced outlying points) tend to have longer names because often they start with united, thus they could easily be excluded by character length.
+```{r}
+Covid_Data_2 <- Covid_Data_1[nchar(Covid_Data_1$countriesAndTerritories)<11,]
+```
+
+
+Map the first letter of the county names to their numeric position in the alphabet.
+```{r}
+CountryAb <- as.integer(as.factor(substr(Covid_Data_2$countriesAndTerritories,1,1)))
+```
+
+
+Do linear modeling using the numerically mapped letters and the number of COVID cases per 100,000 people. This will yield a p-value. In our case, we have forced it to a low value of 0.03444 thus implying a significant relationship that is entirely facetious.
+```{r}
+Linear_Covid_Model <- lm(Cumulative_number_for_14_days_of_COVID.19_cases_per_100000 ~ CountryAb, data=Covid_Data_2)
+summary(Linear_Covid_Model)
+```
+
+
+summary: Our "bad statistics" included choosing a date that already had a strong psuedo-association (small p value) between alphanumeric position of country and cases/100,000 and arbitrarily omitting data points. We omitted country names longer than 10, which strengthened our association. Therefore, our targeted choice of data and omission of data points that violated an arbitrary criterion that biased the dataset provided a facetious significant p value.
+
